@@ -33,6 +33,10 @@ class MainActivity : AppCompatActivity() {
             val binder = service as MusicService.MusicBinder
             musicService = binder.getService()
             musicBound = true
+            createNotificationChannel()
+            showNotification()
+
+
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -43,6 +47,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val CHANNEL_ID = "music_channel_id"
+        private const val NOTIFICATION_ID = 1
     }
 
 
@@ -72,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             if (binding.startPlayerButton.visibility == View.VISIBLE) {
                 showPauseButton()
             }
-            showNotification(R.drawable.pause_icon)
+
         }
 
         binding.previousPlayerButton.setOnClickListener {
@@ -81,20 +86,19 @@ class MainActivity : AppCompatActivity() {
             if (binding.startPlayerButton.visibility == View.VISIBLE) {
                 showPlayButton()
             }
-            showNotification(R.drawable.pause_icon)
+
         }
 
         binding.startPlayerButton.setOnClickListener {
             musicService.start()
             showPauseButton()
-            showNotification(R.drawable.pause_icon)
+
         }
 
         binding.pausePlayerButton.setOnClickListener {
             musicService.pause()
             showPlayButton()
 
-            showNotification(R.drawable.start_icon)
         }
 
         createNotificationChannel()
@@ -116,24 +120,28 @@ class MainActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(notificationChannel)
         }
     }
-    private fun showNotification(button: Int) {
+    private fun showNotification() {
         val intent = Intent(this, MainActivity::class.java)
         val contentIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val previousIntent = Intent(this, NotificationReceiver::class.java).setAction("PREVIOUS")
-        val previousPendingIntent = PendingIntent.getBroadcast(this, 0, previousIntent, PendingIntent.FLAG_IMMUTABLE)
+        val previousIntent = Intent(this, MusicService::class.java).setAction("PREVIOUS")
+        val previousPendingIntent = PendingIntent.getService(this, 0, previousIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val playIntent = Intent(this, NotificationReceiver::class.java).setAction("PLAY")
-        val playPendingIntent = PendingIntent.getBroadcast(this, 0, playIntent, PendingIntent.FLAG_IMMUTABLE)
+        val playIntent = Intent(this, MusicService::class.java).setAction("PLAY")
+        val playPendingIntent = PendingIntent.getService(this, 0, playIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val nextIntent = Intent(this, NotificationReceiver::class.java).setAction("NEXT")
-        val nextPendingIntent = PendingIntent.getBroadcast(this, 0, nextIntent, PendingIntent.FLAG_IMMUTABLE)
+        val pauseIntent = Intent(this, MusicService::class.java).setAction("PAUSE")
+        val pausePendingIntent = PendingIntent.getService(this, 0, pauseIntent, PendingIntent.FLAG_IMMUTABLE)
+
+        val nextIntent = Intent(this, MusicService::class.java).setAction("NEXT")
+        val nextPendingIntent = PendingIntent.getService(this, 0, nextIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.baseline_music_note_24)
             .addAction(R.drawable.back_icon, "Previous", previousPendingIntent)
-            .addAction(button, "Play", playPendingIntent)
-            .addAction(R.drawable.next_icon, "NEXT", nextPendingIntent)
+            .addAction(R.drawable.start_icon, "Play", playPendingIntent)
+            .addAction(R.drawable.pause_icon, "Pause", pausePendingIntent)
+            .addAction(R.drawable.next_icon, "Next", nextPendingIntent)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle())
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(contentIntent)
