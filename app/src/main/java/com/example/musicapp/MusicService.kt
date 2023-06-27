@@ -5,6 +5,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 
 class MusicService: Service() {
 
@@ -18,6 +19,7 @@ class MusicService: Service() {
         const val ACTION_NEXT = "NEXT"
         const val ACTION_PREVIOUS = "PREVIOUS"
         const val ACTION_PLAY = "PLAY"
+        const val ACTION_PAUSE = "PAUSE"
     }
 
     override fun onCreate() {
@@ -54,7 +56,7 @@ class MusicService: Service() {
         mPlayer.stop()
         mPlayer = MediaPlayer.create(applicationContext, songs[songPos])
         mPlayer.start()
-        isPlaying = false
+        isPlaying = true
     }
 
     fun start() {
@@ -76,15 +78,15 @@ class MusicService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val actionName = intent?.getStringExtra("action_name")
+        val actionName = intent?.action
         if (actionName != null) {
             when (actionName) {
                 ACTION_PLAY -> {
-                    if (isPlaying) {
-                        pause()
-                    } else {
-                        start()
-                    }
+                    start()
+                }
+
+                ACTION_PAUSE -> {
+                    pause()
                 }
 
                 ACTION_NEXT -> {
